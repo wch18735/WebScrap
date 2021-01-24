@@ -1,0 +1,8 @@
+# .idea folder
+.idea/
+
+# debug.log
+debug.log
+
+# Quiz
+Quiz.py
