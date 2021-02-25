@@ -1,6 +1,7 @@
 import requests
-from  playsound import playsound
+import re
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 def create_soup(url):
     headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36"}
@@ -57,9 +58,13 @@ def scrape_headline_news():
 
 def scrape_it_news():
     print("[IT 뉴스]")
-    for page in range(1,11):
-        # 1 ~ 10 page
-        url = f"https://news.naver.com/main/list.nhn?mode=LS2D&mid=shm&sid2=230&sid1=105&date=20210122&page={page}"
+    today = datetime.today().strftime("%Y%m%d")
+    url = f"https://news.naver.com/main/list.nhn?mode=LS2D&sid2=230&mid=shm&sid1=105&date={today}"
+    soup = create_soup(url)
+    page_num = len(soup.find("div", attrs={"class": "paging"}).find_all("a")) + 1
+
+    for page in range(1, page_num + 1):
+        url = f"https://news.naver.com/main/list.nhn?mode=LS2D&mid=shm&sid2=230&sid1=105&date={today}&page={page}"
         soup = create_soup(url)
         news_list = soup.find("ul", attrs={"class": "type06_headline"}).find_all("li")
         for news in news_list:
@@ -72,6 +77,57 @@ def scrape_it_news():
                 title = news.find("a").get_text().strip()
                 link = news.find("a")["href"]
                 print(title, link)
+    print()
+
+def scrape_economy_news():
+    print("[금융 뉴스]")
+    today = datetime.today().strftime("%Y%m%d")
+    url = f"https://news.naver.com/main/list.nhn?mode=LS2D&sid2=259&sid1=101&mid=shm&date={today}"
+    soup = create_soup(url)
+    page_num = len(soup.find("div", attrs={"class": "paging"}).find_all("a")) + 1
+
+    for page in range(1, page_num + 1):
+        # 1 ~ 10 page
+        url = f"https://news.naver.com/main/list.nhn?mode=LS2D&mid=shm&sid2=259&sid1=101&date={today}&page={page}"
+        soup = create_soup(url)
+        tables = soup.find_all("ul", attrs={"class": re.compile("^type06")})
+
+        for news_list in tables:
+            for news in news_list.find_all("li"):
+                img = news.find("img")
+                if img:
+                    title = news.find("a").img["alt"].strip()
+                    link = news.find("a")["href"]
+                    print(title, link)
+                else:
+                    title = news.find("a").get_text().strip()
+                    link = news.find("a")["href"]
+                    print(title, link)
+    print()
+
+def scrape_stock_news():
+    print("[증권 뉴스]")
+    today = datetime.today().strftime("%Y%m%d")
+    url = f"https://news.naver.com/main/list.nhn?mode=LS2D&sid2=258&sid1=101&mid=shm&date={today}"
+    soup = create_soup(url)
+    page_num = len(soup.find("div", attrs={"class": "paging"}).find_all("a")) + 1
+
+    for page in range(1, page_num + 1):
+        url = f"https://news.naver.com/main/list.nhn?mode=LS2D&mid=shm&sid2=258&sid1=101&date={today}&page={page}"
+        soup = create_soup(url)
+        tables = soup.find_all("ul", attrs={"class": re.compile("^type06")})
+
+        for news_list in tables:
+            for news in news_list.find_all("li"):
+                img = news.find("img")
+                if img:
+                    title = news.find("a").img["alt"].strip()
+                    link = news.find("a")["href"]
+                    print(title, link)
+                else:
+                    title = news.find("a").get_text().strip()
+                    link = news.find("a")["href"]
+                    print(title, link)
     print()
 
 def scrape_english():
@@ -102,11 +158,12 @@ def scrape_english_news():
         f.write(audio.content)
     script = soup.find("div", attrs={"class": "engnews_article_section"}).get_text()
     print(script)
-    playsound("today_news.mp3")
 
 if __name__=="__main__":
     scrape_weather()
     scrape_headline_news()
     scrape_it_news()
+    scrape_economy_news()
     scrape_english()
+    scrape_stock_news()
     scrape_english_news()
